@@ -12,7 +12,9 @@ use dosamigos\ckeditor\CKEditor;
 <div class="product-form">
 
     <?php $form = ActiveForm::begin([
-        'enableClientValidation' => true,
+        'options'=>[
+            'enctype'=>'multipart/form-data'
+        ]
     ]); ?>
 
     <?= $form->field($model, 'name')->textInput(['maxlength' => true]) ?>
@@ -33,7 +35,7 @@ use dosamigos\ckeditor\CKEditor;
     </div>
     </div> -->
 
-    <?= $form->field($model, 'image', [
+    <?= $form->field($model, 'imageFile', [
         'template'=>'
                 <div class="custom-file">
                     {input}

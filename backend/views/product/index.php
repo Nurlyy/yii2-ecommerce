@@ -1,5 +1,6 @@
 <?php
 
+use common\models\Product;
 use yii\helpers\Html;
 use yii\helpers\Url;
 use yii\grid\ActionColumn;
@@ -26,17 +27,34 @@ $this->params['breadcrumbs'][] = $this->title;
         'dataProvider' => $dataProvider,
         'filterModel' => $searchModel,
         'columns' => [
-            ['class' => 'yii\grid\SerialColumn'],
 
-            'id',
+            [
+                'attribute'=>'id',
+                'contentOptions'=>[
+                    'style'=>'width:75px'
+                ]
+            ],
+            [
+                'attribute'=>'image',
+                'content'=>function($model){
+                    /** @var \common\models\Product $model  */
+                    return Html::img($model->getImageUrl(), ['width'=>150]);                    
+                },
+            ],
             'name',
-            'description:ntext',
-            'image',
+            
             'price',
-            //'status',
-            //'created_at',
-            //'updated_at',
-            //'created_by',
+            [
+                'attribute'=>'status',
+                'content'=>function($model){
+                    return Html::tag('span', $model->status ? 'Active' : 'Draft', [
+                        'class' => $model->status ? 'badge badge-success' : 'badge badge-danger'
+                    ]);
+                },
+            ],
+            'created_at:datetime',
+            'updated_at:datetime',
+            // 'created_by',
             //'updated_by',
             [
                 'class' => ActionColumn::className(),

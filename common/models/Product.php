@@ -3,6 +3,9 @@
 namespace common\models;
 
 use Yii;
+use yii\behaviors\BlameableBehavior;
+use yii\behaviors\TimestampBehavior;
+use yii\helpers\FileHelper;
 
 /**
  * This is the model class for table "{{%products}}".
@@ -25,6 +28,14 @@ use Yii;
  */
 class Product extends \yii\db\ActiveRecord
 {
+
+    public function behaviors(){
+        return [
+            TimestampBehavior::class,
+            BlameableBehavior::class,
+        ];
+    }
+
     /**
      * {@inheritdoc}
      */
@@ -32,6 +43,13 @@ class Product extends \yii\db\ActiveRecord
     {
         return '{{%products}}';
     }
+
+    /**
+     * @var yii\web\UploadedFile
+     */
+
+    public $imageFile;
+
 
     /**
      * {@inheritdoc}
@@ -42,6 +60,7 @@ class Product extends \yii\db\ActiveRecord
             [['name', 'price', 'status'], 'required'],
             [['description'], 'string'],
             [['price'], 'number'],
+            [['imageFile'], 'image', 'extensions'=>'png, jpg, jpeg, webp', 'maxSize'=> 10*1024*1024],
             [['status', 'created_at', 'updated_at', 'created_by', 'updated_by'], 'integer'],
             [['name'], 'string', 'max' => 255],
             [['image'], 'string', 'max' => 2000],
@@ -116,5 +135,36 @@ class Product extends \yii\db\ActiveRecord
     public static function find()
     {
         return new \common\models\query\ProductQuery(get_called_class());
+    }
+
+    public function save($runValidation=true, $attributeNames = null){
+        if($this->imageFile){
+            $this->image = '/products/'.Yii::$app->security->generateRandomString(32).'/'.$this->imageFile->baseName.'.'.$this->imageFile->extension;
+        }
+        $transaction = Yii::$app->db->beginTransaction();
+        $ok = parent::save($runValidation, $attributeNames);
+
+        if($ok && $this->imageFile){
+            $fullPath = Yii::getAlias('@frontend/web/storage/'.$this->image);
+            $dir = dirname($fullPath);
+            
+            if (!FileHelper::createDirectory($dir) | !$this->imageFile->saveAs($fullPath)){
+                $transaction->rollBack();
+                
+                return false;
+            }
+        }else{
+        }
+        $transaction->commit();
+        
+        return $ok;
+    }
+
+    public function getImageUrl(){
+        if($this->image){
+            return Yii::$app->params['frontendUrl'] . '/storage' . $this->image;
+        } else{
+            return Yii::$app->params['frontendUrl'].'/img/taqyryp.png';
+        }
     }
 }
