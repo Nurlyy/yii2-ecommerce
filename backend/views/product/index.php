@@ -1,6 +1,7 @@
 <?php
 
 use common\models\Product;
+use yii\bootstrap4\LinkPager;
 use yii\helpers\Html;
 use yii\helpers\Url;
 use yii\grid\ActionColumn;
@@ -43,7 +44,10 @@ $this->params['breadcrumbs'][] = $this->title;
             ],
             'name',
             
-            'price',
+            [
+                'attribute' => 'price',
+                'format' => ['currency', 'KZT']
+            ],
             [
                 'attribute'=>'status',
                 'content'=>function($model){
@@ -62,6 +66,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     return Url::toRoute([$action, 'id' => $model->id]);
                  }
             ],
+            
         ],
     ]); ?>
 

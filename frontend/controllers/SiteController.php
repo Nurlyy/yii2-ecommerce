@@ -11,11 +11,15 @@ use yii\web\Controller;
 use yii\filters\VerbFilter;
 use yii\filters\AccessControl;
 use common\models\LoginForm;
+use common\models\Product;
 use frontend\models\PasswordResetRequestForm;
 use frontend\models\ResetPasswordForm;
 use frontend\models\SignupForm;
 use frontend\models\ContactForm;
 use frontend\models\EntryForm;
+use yii\data\ActiveDataFilter;
+use yii\data\ActiveDataProvider;
+use yii\debug\models\timeline\DataProvider;
 
 /**
  * Site controller
@@ -76,11 +80,18 @@ class SiteController extends Controller
      */
     public function actionIndex()
     {
-        return $this->render('index');
+        $dataProvider = new ActiveDataProvider([
+            'query' => Product::find()->published(),
+
+        ]);
+        return $this->render('index', [
+            'dataProvider' => $dataProvider
+        ]);
     }
 
-    public function actionSay($message = 'Hello'){
-        return $this->render('say', ['message'=>$message]);
+    public function actionSay($message = 'Hello')
+    {
+        return $this->render('say', ['message' => $message]);
     }
 
     /**
@@ -117,48 +128,18 @@ class SiteController extends Controller
 
         return $this->goHome();
     }
+    
 
-    /**
-     * Displays contact page.
-     *
-     * @return mixed
-     */
-    public function actionContact()
+    public function actionEntry()
     {
-        $model = new ContactForm();
-        if ($model->load(Yii::$app->request->post()) && $model->validate()) {
-            if ($model->sendEmail(Yii::$app->params['adminEmail'])) {
-                Yii::$app->session->setFlash('success', 'Thank you for contacting us. We will respond to you as soon as possible.');
-            } else {
-                Yii::$app->session->setFlash('error', 'There was an error sending your message.');
-            }
-
-            return $this->refresh();
-        }
-
-        return $this->render('contact', [
-            'model' => $model,
-        ]);
-    }
-
-    public function actionEntry(){
         $model = new EntryForm();
-         if($model->load(Yii::$app->request->post()) && $model->validate()){
-            return $this->render('entry-confirm', ['model'=> $model]);
-         }else{
-            return $this->render('entry', ['model'=>$model]);
-         }
+        if ($model->load(Yii::$app->request->post()) && $model->validate()) {
+            return $this->render('entry-confirm', ['model' => $model]);
+        } else {
+            return $this->render('entry', ['model' => $model]);
+        }
     }
 
-    /**
-     * Displays about page.
-     *
-     * @return mixed
-     */
-    public function actionAbout()
-    {
-        return $this->render('about');
-    }
 
     /**
      * Signs user up.
