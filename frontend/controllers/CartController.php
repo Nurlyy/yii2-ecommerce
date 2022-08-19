@@ -3,6 +3,8 @@
 namespace frontend\controllers;
 
 use common\models\CartItem;
+use common\models\Order;
+use common\models\OrderAddress;
 use common\models\Product;
 use frontend\base\Controller;
 use Yii;
@@ -36,15 +38,7 @@ class CartController extends Controller
         if (Yii::$app->user->isGuest) {
             $cartItems = Yii::$app->session->get(CartItem::SESSION_KEY, []);
         } else {
-            $cartItems = CartItem::findBySql('SELECT 
-            c.product_id as id, 
-            p.image,
-            p.name,
-            p.price,
-            c.quantity,
-            p.price * c.quantity as total_price
-            FROM cart_items c LEFT JOIN products p on p.id = c.product_id
-            WHERE c.created_by = :userId', ['userId' => Yii::$app->user->id])->asArray()->all();
+            $cartItems = CartItem::getItemsForUser(currentUserId());
         }
 
         return $this->render('index', [
@@ -128,17 +122,18 @@ class CartController extends Controller
         return $this->redirect(['index']);
     }
 
-    public function actionChangeQuantity(){
+    public function actionChangeQuantity()
+    {
         $id = Yii::$app->request->post('id');
         $product = Product::find()->id($id)->published()->one();
         if (!$product) {
             throw new NotFoundHttpException('Product not found');
         }
         $quantity = Yii::$app->request->post('quantity');
-        if(isGuest()){
+        if (isGuest()) {
             $cartItems = Yii::$app->session->get(CartItem::SESSION_KEY, []);
             foreach ($cartItems as $i => &$cartItem) {
-                if($cartItem['id'] === $id){
+                if ($cartItem['id'] === $id) {
                     $cartItem['quantity'] = $quantity;
                     break;
                 }
@@ -146,13 +141,49 @@ class CartController extends Controller
             Yii::$app->session->set(CartItem::SESSION_KEY, $cartItems);
         } else {
             $cartItem = CartItem::find()->userId(currentUserId())->productId($product['id'])->one();
-            if($cartItem){
+            if ($cartItem) {
                 $cartItem->quantity = $quantity;
                 $cartItem->save();
             }
         }
 
         return CartItem::getTotalQuantityForUser(currentUserId());
-        
+    }
+
+    public function actionCheckout()
+    {
+        $order = new Order();
+        $orderAddress = new OrderAddress();
+
+        if (!isGuest()) {
+            /** @var \common\models\User $user */
+            $user = Yii::$app->user->identity;
+            $userAddress = $user->getAddress();
+
+            $order->firstname = $user->firstname;
+            $order->lastname = $user->lastname;
+            $order->email = $user->email;
+            $order->status = Order::STATUS_DRAFT;
+
+            $orderAddress->address = $userAddress->address;
+            $orderAddress->city = $userAddress->city;
+            $orderAddress->state = $userAddress->state;
+            $orderAddress->country = $userAddress->country;
+            $orderAddress->zipcode = $userAddress->zipcode;
+            $cartItems = CartItem::getItemsForUser(currentUserId());
+        } else {
+            $cartItems = Yii::$app->session->get(CartItem::SESSION_KEY, []);
+        }
+
+        $productQuantity = CartItem::getTotalQuantityForUser(currentUserId());
+        $totalPrice = CartItem::getTotalPriceForUser(currentUserId());
+
+        return $this->render('checkout', [
+            'order' => $order,
+            'orderAddress' => $orderAddress,
+            'cartItems' => $cartItems,
+            'productQuantity' => $productQuantity,
+            'totalPrice' => $totalPrice,
+        ]);
     }
 }
