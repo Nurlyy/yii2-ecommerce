@@ -4,6 +4,7 @@
 
 use phpDocumentor\Reflection\Types\String_;
 use yii\helpers\StringHelper;
+use yii\helpers\Url;
 
 ?>
     <div class="card h-100">
@@ -24,7 +25,7 @@ use yii\helpers\StringHelper;
         <div class="card-footer mt-0 pt-0 border-top-0 bg-transparent">
             <div class="text-center">
             <h6 class=""><?php echo Yii::$app->formatter->asCurrency($model->price, 'KZT') ?></h6>
-                <a class="btn btn-outline-dark mt-auto" href="#">Add To Cart</a>
+                <a class="btn btn-outline-dark mt-auto btn-add-to-cart" href="<?php echo Url::to('/cart/add') ?>">Add To Cart</a>
             </div>
         </div>
     </div>

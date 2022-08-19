@@ -2,8 +2,8 @@
 
 namespace frontend\controllers;
 
+use frontend\base\Controller;
 use Yii;
-use yii\web\Controller;
 use yii\filters\AccessControl;
 use yii\web\ForbiddenHttpException;
 
