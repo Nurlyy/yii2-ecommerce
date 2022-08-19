@@ -14,6 +14,7 @@ use yii\helpers\Url;
     </div>
 
     <div class="cart-body p-0">
+        <?php if(!empty($items)): ?>
         <table class="table table-hover">
             <thead>
                 <tr>
@@ -54,6 +55,8 @@ use yii\helpers\Url;
                 Checkout
             </a>
         </div>
-
+        <?php else: ?>
+            <p class="text-muted text-center p-5">There are no items in the cart</p>
+        <?php endif ?>
     </div>
 </div>
